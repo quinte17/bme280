@@ -2,6 +2,11 @@ package bme280
 
 import "github.com/davecheney/i2c"
 
+//import "fmt"
+import "encoding/binary"
+import "bytes"
+import "time"
+
 const (
 	// Register
 	REG_id         = 0xD0
@@ -18,7 +23,9 @@ const (
 	REG_temp_xlsb  = 0xFC
 	REG_hum_msb    = 0xFD
 	REG_hum_lsb    = 0xFE
-	// Bitnames
+
+	REG_calib00 = 0x88
+	REG_calib26 = 0xE1
 
 	// Options
 	OPT_press_oversampling_skipped = 0x00
@@ -65,7 +72,48 @@ const (
 )
 
 type BME280 struct {
-	i2c *i2c.I2C
+	i2c   *i2c.I2C
+	calib struct {
+		temp struct {
+			T1 uint16
+			T2 int16
+			T3 int16
+		}
+		press struct {
+			P1 uint16
+			P2 int16
+			P3 int16
+			P4 int16
+			P5 int16
+			P6 int16
+			P7 int16
+			P8 int16
+			P9 int16
+		}
+		hum struct {
+			H1 uint8
+			H2 int16
+			H3 uint8
+			H4 int16
+			H5 int16
+			H6 int8
+		}
+	}
+}
+
+func (bme *BME280) read(reg byte, data []byte) (int, error) {
+	// first we have to write register adress
+	_, err := bme.i2c.Write([]byte{reg})
+	if err != nil {
+		return 0, err
+	}
+	// now we can read the data
+	return bme.i2c.Read(data)
+}
+
+func convert(b []byte, data interface{}) error {
+	buf := bytes.NewReader(b)
+	return binary.Read(buf, binary.LittleEndian, data)
 }
 
 func NewBME280(i2c *i2c.I2C) (*BME280, error) {
@@ -73,9 +121,44 @@ func NewBME280(i2c *i2c.I2C) (*BME280, error) {
 		i2c: i2c,
 	}
 	// initialize bme
-	bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
-	bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 | OPT_press_oversampling_x1 | OPT_mode_normal})
-	bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
+	//	bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
+	//	bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 | OPT_press_oversampling_x1 | OPT_mode_normal})
+	//	bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
+
+	// read some data
+	var x [1]byte
+	for x[0] != 0x60 {
+		bme.read(REG_id, x[:])
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// read calibration data
+	var calib1 [26]byte
+	var calib2 [16]byte
+	bme.read(REG_calib00, calib1[:])
+	bme.read(REG_calib26, calib2[:])
+
+	convert(calib1[0:2], &bme.calib.temp.T1)
+	convert(calib1[2:4], &bme.calib.temp.T2)
+	convert(calib1[4:6], &bme.calib.temp.T3)
+
+	convert(calib1[6:8], &bme.calib.press.P1)
+	convert(calib1[8:10], &bme.calib.press.P2)
+	convert(calib1[10:12], &bme.calib.press.P3)
+	convert(calib1[12:14], &bme.calib.press.P4)
+	convert(calib1[14:16], &bme.calib.press.P5)
+	convert(calib1[16:18], &bme.calib.press.P6)
+	convert(calib1[18:20], &bme.calib.press.P7)
+	convert(calib1[20:22], &bme.calib.press.P8)
+	convert(calib1[22:24], &bme.calib.press.P9)
+
+	convert(calib1[25:], &bme.calib.hum.H1)
+	convert(calib2[0:2], &bme.calib.hum.H2)
+	convert(calib2[2:3], &bme.calib.hum.H3)
+	// H4 and H5 are a little bit tricky alligned.
+	//convert(calib2[3:5], &bme.calib.hum.H4)
+	//convert(calib2[4:6], &bme.calib.hum.H5)
+	convert(calib2[6:], &bme.calib.hum.H6)
 
 	return &bme, nil
 }
