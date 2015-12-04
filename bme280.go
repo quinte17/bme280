@@ -138,19 +138,8 @@ func NewBME280(i2c *i2c.I2C) (*BME280, error) {
 	bme.read(REG_calib00, calib1[:])
 	bme.read(REG_calib26, calib2[:])
 
-	convert(calib1[0:2], &bme.calib.temp.T1)
-	convert(calib1[2:4], &bme.calib.temp.T2)
-	convert(calib1[4:6], &bme.calib.temp.T3)
-
-	convert(calib1[6:8], &bme.calib.press.P1)
-	convert(calib1[8:10], &bme.calib.press.P2)
-	convert(calib1[10:12], &bme.calib.press.P3)
-	convert(calib1[12:14], &bme.calib.press.P4)
-	convert(calib1[14:16], &bme.calib.press.P5)
-	convert(calib1[16:18], &bme.calib.press.P6)
-	convert(calib1[18:20], &bme.calib.press.P7)
-	convert(calib1[20:22], &bme.calib.press.P8)
-	convert(calib1[22:24], &bme.calib.press.P9)
+	convert(calib1[0:6], &bme.calib.temp)
+	convert(calib1[6:24], &bme.calib.press)
 
 	convert(calib1[25:], &bme.calib.hum.H1)
 	convert(calib2[0:2], &bme.calib.hum.H2)
