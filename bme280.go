@@ -88,7 +88,9 @@ func (bme *BME280) initialize() (err error) {
 
 	// initialize bme
 	bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
-	bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 | OPT_press_oversampling_x1 | OPT_mode_normal})
+	bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 |
+		OPT_press_oversampling_x1 |
+		OPT_mode_normal})
 	bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
 
 	return err
@@ -108,29 +110,63 @@ func (bme *BME280) Readenv() (env Envdata, err error) {
 	hraw := int32(bme.raw[6])<<8 | int32(bme.raw[7])
 
 	t, tfine := bme.temp(traw)
-	bme.press(praw, tfine)
-	bme.hum(hraw, tfine)
+	p := bme.press(praw, tfine)
+	h := bme.hum(hraw, tfine)
 
 	env.Temp = t
+	env.Press = p / 100
+	env.Hum = h
 	return env, err
 }
 
 func (bme *BME280) temp(raw int32) (float64, int32) {
 	var v1, v2, t float64
 	var tfine int32
-	v1 = (float64(raw)/16384.0 - float64(bme.calib.temp.T1)/1024.0) * float64(bme.calib.temp.T2)
-	v2 = (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) * (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) * float64(bme.calib.temp.T3)
+	v1 = (float64(raw)/16384.0 - float64(bme.calib.temp.T1)/1024.0) *
+		float64(bme.calib.temp.T2)
+	v2 = (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) *
+		(float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) *
+		float64(bme.calib.temp.T3)
 	tfine = int32(v1 + v2)
 	t = (v1 + v2) / 5120.0
 	return t, tfine
 }
 
-func (bme *BME280) press(raw int32, tfine int32) uint32 {
-	return 0
+func (bme *BME280) press(raw int32, tfine int32) float64 {
+	var v1, v2, p float64
+	v1 = float64(tfine)/2.0 - 64000.0
+	v2 = v1 * v1 * (float64(bme.calib.press.P6) / 32768.0)
+	v2 = v2 + v1*(float64(bme.calib.press.P5)*2.0)
+	v2 = v2/4.0 + (float64(bme.calib.press.P4) * 65536.0)
+	v1 = (float64(bme.calib.press.P3)*v1*v1/524288.0 +
+		float64(bme.calib.press.P2)*v1) / 524288.0
+	v1 = (1.0 + v1/32768.0) * float64(bme.calib.press.P1)
+	if v1 == 0 {
+		return 0
+	}
+	p = 1048576.0 - float64(raw)
+	p = (p - v2/4096.0) * 6250.0 / v1
+	v1 = float64(bme.calib.press.P9) * p * p / 2147483648.0
+	v2 = p * float64(bme.calib.press.P8) / 32768.0
+	p = p + (v1+v2+float64(bme.calib.press.P7))/16.0
+	return p
 }
 
-func (bme *BME280) hum(raw int32, tfine int32) (h uint32) {
-	return 0
+func (bme *BME280) hum(raw int32, tfine int32) float64 {
+	var h float64
+	h = float64(tfine) - 76800.0
+	h = (float64(raw) - float64(bme.calib.hum.H4)*64.0 +
+		float64(bme.calib.hum.H5)/16384.0*h) * float64(bme.calib.hum.H2) /
+		65536.0 * (1.0 + float64(bme.calib.hum.H6)/67108864.0*h*
+		(1.0+float64(bme.calib.hum.H3)/67108864.0*h))
+	h = h * (1.0 - float64(bme.calib.hum.H1)*h/524288.0)
+
+	if h > 100.0 {
+		h = 100.0
+	} else if h < 0.0 {
+		h = 0.0
+	}
+	return h
 }
 
 func New(i2c *i2c.I2C) (*BME280, error) {
