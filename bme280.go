@@ -97,14 +97,14 @@ func (bme *BME280) initialize() (err error) {
 }
 
 // latch all data in
-func (bme *BME280) ReadRaw() (err error) {
+func (bme *BME280) readRaw() (err error) {
 	_, err = bme.read(REG_press_msb, bme.raw[:])
 	return err
 }
 
 // calculate enviroment data
 func (bme *BME280) Readenv() (env Envdata, err error) {
-	err = bme.ReadRaw()
+	err = bme.readRaw()
 	traw := int32(bme.raw[3])<<12 | int32(bme.raw[4])<<4 | int32(bme.raw[5])>>4
 	praw := int32(bme.raw[0])<<12 | int32(bme.raw[1])<<4 | int32(bme.raw[2])>>4
 	hraw := int32(bme.raw[6])<<8 | int32(bme.raw[7])
@@ -120,46 +120,48 @@ func (bme *BME280) Readenv() (env Envdata, err error) {
 }
 
 func (bme *BME280) temp(raw int32) (float64, int32) {
+	calt := bme.calib.temp
 	var v1, v2, t float64
 	var tfine int32
-	v1 = (float64(raw)/16384.0 - float64(bme.calib.temp.T1)/1024.0) *
-		float64(bme.calib.temp.T2)
-	v2 = (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) *
-		(float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) *
-		float64(bme.calib.temp.T3)
+	v1 = (float64(raw)/16384.0 - float64(calt.T1)/1024.0) *
+		float64(calt.T2)
+	v2 = (float64(raw)/131072.0 - float64(calt.T1)/8192.0) *
+		(float64(raw)/131072.0 - float64(calt.T1)/8192.0) *
+		float64(calt.T3)
 	tfine = int32(v1 + v2)
 	t = (v1 + v2) / 5120.0
 	return t, tfine
 }
 
 func (bme *BME280) press(raw int32, tfine int32) float64 {
+	calp := bme.calib.press
 	var v1, v2, p float64
 	v1 = float64(tfine)/2.0 - 64000.0
-	v2 = v1 * v1 * (float64(bme.calib.press.P6) / 32768.0)
-	v2 = v2 + v1*(float64(bme.calib.press.P5)*2.0)
-	v2 = v2/4.0 + (float64(bme.calib.press.P4) * 65536.0)
-	v1 = (float64(bme.calib.press.P3)*v1*v1/524288.0 +
-		float64(bme.calib.press.P2)*v1) / 524288.0
-	v1 = (1.0 + v1/32768.0) * float64(bme.calib.press.P1)
+	v2 = v1 * v1 * (float64(calp.P6) / 32768.0)
+	v2 = v2 + v1*(float64(calp.P5)*2.0)
+	v2 = v2/4.0 + (float64(calp.P4) * 65536.0)
+	v1 = (float64(calp.P3)*v1*v1/524288.0 + float64(calp.P2)*v1) / 524288.0
+	v1 = (1.0 + v1/32768.0) * float64(calp.P1)
 	if v1 == 0 {
 		return 0
 	}
 	p = 1048576.0 - float64(raw)
 	p = (p - v2/4096.0) * 6250.0 / v1
-	v1 = float64(bme.calib.press.P9) * p * p / 2147483648.0
-	v2 = p * float64(bme.calib.press.P8) / 32768.0
-	p = p + (v1+v2+float64(bme.calib.press.P7))/16.0
+	v1 = float64(calp.P9) * p * p / 2147483648.0
+	v2 = p * float64(calp.P8) / 32768.0
+	p = p + (v1+v2+float64(calp.P7))/16.0
 	return p
 }
 
 func (bme *BME280) hum(raw int32, tfine int32) float64 {
+	calh := bme.calib.hum
 	var h float64
 	h = float64(tfine) - 76800.0
-	h = (float64(raw) - float64(bme.calib.hum.H4)*64.0 +
-		float64(bme.calib.hum.H5)/16384.0*h) * float64(bme.calib.hum.H2) /
-		65536.0 * (1.0 + float64(bme.calib.hum.H6)/67108864.0*h*
-		(1.0+float64(bme.calib.hum.H3)/67108864.0*h))
-	h = h * (1.0 - float64(bme.calib.hum.H1)*h/524288.0)
+	h = (float64(raw) - float64(calh.H4)*64.0 +
+		float64(calh.H5)/16384.0*h) * float64(calh.H2) /
+		65536.0 * (1.0 + float64(calh.H6)/67108864.0*h*
+		(1.0+float64(calh.H3)/67108864.0*h))
+	h = h * (1.0 - float64(calh.H1)*h/524288.0)
 
 	if h > 100.0 {
 		h = 100.0
