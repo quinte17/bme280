@@ -34,6 +34,12 @@ type BME280 struct {
 	raw [8]byte
 }
 
+type Envdata struct {
+	Temp  float64
+	Press float64
+	Hum   float64
+}
+
 func (bme *BME280) read(reg byte, data []byte) (int, error) {
 	// first we have to write register adress
 	_, err := bme.i2c.Write([]byte{reg})
@@ -92,6 +98,39 @@ func (bme *BME280) initialize() (err error) {
 func (bme *BME280) ReadRaw() (err error) {
 	_, err = bme.read(REG_press_msb, bme.raw[:])
 	return err
+}
+
+// calculate enviroment data
+func (bme *BME280) Readenv() (env Envdata, err error) {
+	err = bme.ReadRaw()
+	traw := int32(bme.raw[3])<<12 | int32(bme.raw[4])<<4 | int32(bme.raw[5])>>4
+	praw := int32(bme.raw[0])<<12 | int32(bme.raw[1])<<4 | int32(bme.raw[2])>>4
+	hraw := int32(bme.raw[6])<<8 | int32(bme.raw[7])
+
+	t, tfine := bme.temp(traw)
+	bme.press(praw, tfine)
+	bme.hum(hraw, tfine)
+
+	env.Temp = t
+	return env, err
+}
+
+func (bme *BME280) temp(raw int32) (float64, int32) {
+	var v1, v2, t float64
+	var tfine int32
+	v1 = (float64(raw)/16384.0 - float64(bme.calib.temp.T1)/1024.0) * float64(bme.calib.temp.T2)
+	v2 = (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) * (float64(raw)/131072.0 - float64(bme.calib.temp.T1)/8192.0) * float64(bme.calib.temp.T3)
+	tfine = int32(v1 + v2)
+	t = (v1 + v2) / 5120.0
+	return t, tfine
+}
+
+func (bme *BME280) press(raw int32, tfine int32) uint32 {
+	return 0
+}
+
+func (bme *BME280) hum(raw int32, tfine int32) (h uint32) {
+	return 0
 }
 
 func New(i2c *i2c.I2C) (*BME280, error) {
