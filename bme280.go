@@ -35,9 +35,9 @@ type BME280 struct {
 }
 
 type Envdata struct {
-	Temp  float64
-	Press float64
-	Hum   float64
+	Temp  float64 `json:"temp"`
+	Press float64 `json:"press"`
+	Hum   float64 `json:"hum"`
 }
 
 func (bme *BME280) read(reg byte, data []byte) (int, error) {
