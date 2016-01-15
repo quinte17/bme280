@@ -52,7 +52,7 @@ func (bme *BME280) read(reg byte, data []byte) (int, error) {
 
 func (bme *BME280) bootFinished() (err error) {
 	var x [1]byte
-	for x[0] != 0x60 {
+	for x[0] != 0x60 && err == nil {
 		_, err = bme.read(REG_id, x[:])
 		time.Sleep(50 * time.Millisecond)
 	}
@@ -63,35 +63,64 @@ func (bme *BME280) readCalibdata() (err error) {
 	// read calibration data
 	var calib1 [26]byte
 	var calib2 [16]byte
-	bme.read(REG_calib00, calib1[:])
-	bme.read(REG_calib26, calib2[:])
+	_, err = bme.read(REG_calib00, calib1[:])
+	if err != nil {
+		return err
+	}
+	_, err = bme.read(REG_calib26, calib2[:])
+	if err != nil {
+		return err
+	}
 
-	convert(calib1[0:6], &bme.calib.temp)
-	convert(calib1[6:24], &bme.calib.press)
+	type tmpt struct {
+		idata []byte
+		odata interface{}
+	}
+	tconvert := []tmpt{
+		{calib1[0:6], &bme.calib.temp},
+		{calib1[6:24], &bme.calib.press},
+		{calib1[25:], &bme.calib.hum.H1},
+		{calib2[0:2], &bme.calib.hum.H2},
+		{calib2[2:3], &bme.calib.hum.H3},
+		{calib2[6:], &bme.calib.hum.H6}}
 
-	convert(calib1[25:], &bme.calib.hum.H1)
-	convert(calib2[0:2], &bme.calib.hum.H2)
-	convert(calib2[2:3], &bme.calib.hum.H3)
+	for _, value := range tconvert {
+		err = convert(value.idata, value.odata)
+		if err != nil {
+			return err
+		}
+	}
+
 	// H4 and H5 are a little bit tricky alligned.
 	bme.calib.hum.H4 = int16(calib2[3])<<4 | int16(calib2[4]&0x0F)
 	bme.calib.hum.H5 = int16(calib2[5])<<4 | int16(calib2[4]&0xF0)>>4
-	convert(calib2[6:], &bme.calib.hum.H6)
 
 	return err
 }
 
 func (bme *BME280) initialize() (err error) {
 	// wait for finished initialisation
-	bme.bootFinished()
+	err = bme.bootFinished()
+	if err != nil {
+		return err
+	}
 	// get calibrationdata
-	bme.readCalibdata()
-
+	err = bme.readCalibdata()
+	if err != nil {
+		return err
+	}
 	// initialize bme
-	bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
-	bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 |
+	_, err = bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
+	if err != nil {
+		return err
+	}
+	_, err = bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 |
 		OPT_press_oversampling_x1 |
 		OPT_mode_normal})
-	bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
+	if err != nil {
+		return err
+	}
+	_, err = bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
 
 	return err
 }
@@ -176,7 +205,5 @@ func New(i2c *i2c.I2C) (*BME280, error) {
 		i2c: i2c,
 	}
 
-	bme.initialize()
-
-	return &bme, nil
+	return &bme, bme.initialize()
 }
