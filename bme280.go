@@ -1,10 +1,10 @@
 package bme280
 
-import "github.com/davecheney/i2c"
+import "io"
 import "time"
 
 type BME280 struct {
-	i2c   *i2c.I2C
+	i2c   io.ReadWriter
 	calib struct {
 		temp struct {
 			T1 uint16
@@ -200,7 +200,9 @@ func (bme *BME280) hum(raw int32, tfine int32) float64 {
 	return h
 }
 
-func New(i2c *i2c.I2C) (*BME280, error) {
+// NewI2CDriver initializes the bme280 device to use the i2c-bus for communication.
+// It is expecting the i2c bus as a ReadWriter-Interface. 
+func NewI2CDriver(i2c io.ReadWriter) (*BME280, error) {
 	bme := BME280{
 		i2c: i2c,
 	}

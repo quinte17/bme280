@@ -4,9 +4,11 @@ This is a simple driver for the Bosch Sensortec bme280 environment sensor.
 The datasheet can be found here:
 http://ae-bst.resource.bosch.com/media/products/dokumente/bme280/BST-BME280_DS001-11.pdf
 
-ATM the driver is expecting the i2c-bus.
+ATM the driver is expecting the i2c-bus. SPI-Bus could be added in the future.
 
 # Usage
+	package main
+	
 	import "log"
 	import "github.com/davecheney/i2c"
 	import "github.com/quinte17/bme280" 
@@ -16,7 +18,7 @@ ATM the driver is expecting the i2c-bus.
 		if err != nil {
 			log.Print(err)
 		}
-		bme, err := bme280.New(dev)
+		bme, err := bme280.NewI2CDriver(dev)
 		if err != nil {
 			log.Print(err)
 		}
