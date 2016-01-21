@@ -50,6 +50,14 @@ func (bme *BME280) read(reg byte, data []byte) (int, error) {
 	return bme.i2c.Read(data)
 }
 
+func (bme *BME280) write(reg byte, data []byte) (int, error) {
+	var tdata []byte
+	tdata = append(tdata, reg)
+	tdata = append(tdata, data...)
+
+	return bme.i2c.Write(tdata)
+}
+
 func (bme *BME280) bootFinished() (err error) {
 	var x [1]byte
 	for x[0] != 0x60 && err == nil {
@@ -110,17 +118,17 @@ func (bme *BME280) initialize() (err error) {
 		return err
 	}
 	// initialize bme
-	_, err = bme.i2c.Write([]byte{REG_ctrl_hum, OPT_hum_oversampling_x1})
+	_, err = bme.write(REG_ctrl_hum, []byte{OPT_hum_oversampling_x1})
 	if err != nil {
 		return err
 	}
-	_, err = bme.i2c.Write([]byte{REG_ctrl_meas, OPT_temp_oversampling_x1 |
+	_, err = bme.write(REG_ctrl_meas, []byte{OPT_temp_oversampling_x1 |
 		OPT_press_oversampling_x1 |
 		OPT_mode_normal})
 	if err != nil {
 		return err
 	}
-	_, err = bme.i2c.Write([]byte{REG_config, OPT_config_standbytime_1000})
+	_, err = bme.write(REG_config, []byte{OPT_config_standbytime_1000})
 
 	return err
 }
