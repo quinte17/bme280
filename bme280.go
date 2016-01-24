@@ -209,7 +209,7 @@ func (bme *BME280) hum(raw int32, tfine int32) float64 {
 }
 
 // NewI2CDriver initializes the bme280 device to use the i2c-bus for communication.
-// It is expecting the i2c bus as a ReadWriter-Interface. 
+// It is expecting the i2c bus as a ReadWriter-Interface.
 func NewI2CDriver(i2c io.ReadWriter) (*BME280, error) {
 	bme := BME280{
 		i2c: i2c,
