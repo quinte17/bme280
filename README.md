@@ -2,7 +2,7 @@
 
 This is a simple driver for the Bosch Sensortec bme280 environment sensor.
 The datasheet can be found here:
-http://ae-bst.resource.bosch.com/media/products/dokumente/bme280/BST-BME280_DS001-11.pdf
+https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BME280_DS001-11.pdf
 
 ATM the driver is expecting the i2c-bus. SPI-Bus could be added in the future.
 
