@@ -260,7 +260,7 @@ func (bme *BME280) readCalibdata() (err error) {
 	return err
 }
 
-func (bme *BME280) initialize() (err error) {
+func (bme *BME280) initialize(opts ...option) (err error) {
 	// wait for finished initialisation
 	err = bme.bootFinished()
 	if err != nil {
@@ -272,8 +272,11 @@ func (bme *BME280) initialize() (err error) {
 		return err
 	}
 	// initialize bme
-	return bme.Option(OptHumOversampling(1), OptTempOversampling(1),
-		OptPressOversampling(1), OptModeNormal(), OptConfigStandbytime(1000))
+	if len(opts) == 0 {
+		return bme.Option(OptHumOversampling(1), OptTempOversampling(1),
+			OptPressOversampling(1), OptModeNormal(), OptConfigStandbytime(1000))
+	}
+	return bme.Option(opts...)
 }
 
 // latch all data in
@@ -353,10 +356,12 @@ func (bme *BME280) hum(raw int32, tfine int32) float64 {
 
 // NewI2CDriver initializes the bme280 device to use the i2c-bus for communication.
 // It is expecting the i2c bus as a ReadWriter-Interface.
-func NewI2CDriver(i2c io.ReadWriter) (*BME280, error) {
+// If no options given it will be initialized with:
+// OptHumOversampling(1), OptTempOversampling(1), OptPressOversampling(1), OptModeNormal(), OptConfigStandbytime(1000)
+func NewI2CDriver(i2c io.ReadWriter, ops ...option) (*BME280, error) {
 	bme := BME280{
 		i2c: i2c,
 	}
 
-	return &bme, bme.initialize()
+	return &bme, bme.initialize(ops...)
 }
