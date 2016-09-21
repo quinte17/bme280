@@ -27,6 +27,7 @@ const (
 	OPT_press_oversampling_x4      = 0x0C
 	OPT_press_oversampling_x8      = 0x10
 	OPT_press_oversampling_x16     = 0x14
+	OPT_press_mask                 = 0x1C
 
 	OPT_temp_oversampling_skipped = 0x00
 	OPT_temp_oversampling_x1      = 0x20
@@ -34,6 +35,7 @@ const (
 	OPT_temp_oversampling_x4      = 0x60
 	OPT_temp_oversampling_x8      = 0x80
 	OPT_temp_oversampling_x16     = 0xA0
+	OPT_temp_mask                 = 0xE0
 
 	OPT_hum_oversampling_skipped = 0x00
 	OPT_hum_oversampling_x1      = 0x01
@@ -41,10 +43,12 @@ const (
 	OPT_hum_oversampling_x4      = 0x03
 	OPT_hum_oversampling_x8      = 0x04
 	OPT_hum_oversampling_x16     = 0x05
+	OPT_hum_mask                 = 0x07
 
 	OPT_mode_sleep  = 0x00
 	OPT_mode_forced = 0x01
 	OPT_mode_normal = 0x03
+	OPT_mode_mask   = 0x03
 
 	OPT_config_standbytime_0_5  = 0x00
 	OPT_config_standbytime_62_5 = 0x20
@@ -54,6 +58,7 @@ const (
 	OPT_config_standbytime_1000 = 0xA0
 	OPT_config_standbytime_10   = 0xC0
 	OPT_config_standbytime_20   = 0xE0
+	OPT_config_standbytime_mask = 0xE0
 
 	OPT_config_filter_off = 0x00
 	OPT_config_filter_2   = 0x04
