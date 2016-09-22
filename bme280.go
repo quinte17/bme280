@@ -55,28 +55,28 @@ func OptHumOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_ctrl_hum, []byte{r})
+		_, err := bme.read(reg_ctrl_hum, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = r & ^byte(OPT_hum_mask)
+		r = r & ^byte(opt_hum_mask)
 		switch sampling {
 		case 0:
-			r = r | OPT_hum_oversampling_skipped
+			r = r | opt_hum_oversampling_skipped
 		case 1:
-			r = r | OPT_hum_oversampling_x1
+			r = r | opt_hum_oversampling_x1
 		case 2:
-			r = r | OPT_hum_oversampling_x2
+			r = r | opt_hum_oversampling_x2
 		case 4:
-			r = r | OPT_hum_oversampling_x4
+			r = r | opt_hum_oversampling_x4
 		case 8:
-			r = r | OPT_hum_oversampling_x8
+			r = r | opt_hum_oversampling_x8
 		case 16:
-			r = r | OPT_hum_oversampling_x16
+			r = r | opt_hum_oversampling_x16
 		}
 		// write
-		_, err = bme.write(REG_ctrl_hum, []byte{r})
+		_, err = bme.write(reg_ctrl_hum, []byte{r})
 		return err
 	}
 }
@@ -88,28 +88,28 @@ func OptTempOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_ctrl_meas, []byte{r})
+		_, err := bme.read(reg_ctrl_meas, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = r & ^byte(OPT_temp_mask)
+		r = r & ^byte(opt_temp_mask)
 		switch sampling {
 		case 0:
-			r = r | OPT_temp_oversampling_skipped
+			r = r | opt_temp_oversampling_skipped
 		case 1:
-			r = r | OPT_temp_oversampling_x1
+			r = r | opt_temp_oversampling_x1
 		case 2:
-			r = r | OPT_temp_oversampling_x2
+			r = r | opt_temp_oversampling_x2
 		case 4:
-			r = r | OPT_temp_oversampling_x4
+			r = r | opt_temp_oversampling_x4
 		case 8:
-			r = r | OPT_temp_oversampling_x8
+			r = r | opt_temp_oversampling_x8
 		case 16:
-			r = r | OPT_temp_oversampling_x16
+			r = r | opt_temp_oversampling_x16
 		}
 		// write
-		_, err = bme.write(REG_ctrl_meas, []byte{r})
+		_, err = bme.write(reg_ctrl_meas, []byte{r})
 		return err
 	}
 }
@@ -121,28 +121,28 @@ func OptPressOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_ctrl_meas, []byte{r})
+		_, err := bme.read(reg_ctrl_meas, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = r & ^byte(OPT_press_mask)
+		r = r & ^byte(opt_press_mask)
 		switch sampling {
 		case 0:
-			r = r | OPT_press_oversampling_skipped
+			r = r | opt_press_oversampling_skipped
 		case 1:
-			r = r | OPT_press_oversampling_x1
+			r = r | opt_press_oversampling_x1
 		case 2:
-			r = r | OPT_press_oversampling_x2
+			r = r | opt_press_oversampling_x2
 		case 4:
-			r = r | OPT_press_oversampling_x4
+			r = r | opt_press_oversampling_x4
 		case 8:
-			r = r | OPT_press_oversampling_x8
+			r = r | opt_press_oversampling_x8
 		case 16:
-			r = r | OPT_press_oversampling_x16
+			r = r | opt_press_oversampling_x16
 		}
 		// write
-		_, err = bme.write(REG_ctrl_meas, []byte{r})
+		_, err = bme.write(reg_ctrl_meas, []byte{r})
 		return err
 	}
 }
@@ -153,22 +153,22 @@ func OptMode(mode string) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_ctrl_meas, []byte{r})
+		_, err := bme.read(reg_ctrl_meas, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = r & ^byte(OPT_mode_mask)
+		r = r & ^byte(opt_mode_mask)
 		switch mode {
 		case "sleep":
-			r = r | OPT_mode_sleep
+			r = r | opt_mode_sleep
 		case "forced":
-			r = r | OPT_mode_forced
+			r = r | opt_mode_forced
 		case "normal":
-			r = r | OPT_mode_normal
+			r = r | opt_mode_normal
 		}
 		// write
-		_, err = bme.write(REG_ctrl_meas, []byte{r})
+		_, err = bme.write(reg_ctrl_meas, []byte{r})
 		return err
 	}
 }
@@ -180,26 +180,26 @@ func OptFilter(mode int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_config, []byte{r})
+		_, err := bme.read(reg_config, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = r & ^byte(OPT_config_filter_mask)
+		r = r & ^byte(opt_config_filter_mask)
 		switch mode {
 		case 0:
-			r = r | OPT_config_filter_off
+			r = r | opt_config_filter_off
 		case 2:
-			r = r | OPT_config_filter_2
+			r = r | opt_config_filter_2
 		case 4:
-			r = r | OPT_config_filter_4
+			r = r | opt_config_filter_4
 		case 8:
-			r = r | OPT_config_filter_8
+			r = r | opt_config_filter_8
 		case 16:
-			r = r | OPT_config_filter_16
+			r = r | opt_config_filter_16
 		}
 		// write
-		_, err = bme.write(REG_config, []byte{r})
+		_, err = bme.write(reg_config, []byte{r})
 		return err
 	}
 }
@@ -214,32 +214,32 @@ func OptStandbytime(time int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
-		_, err := bme.read(REG_config, []byte{r})
+		_, err := bme.read(reg_config, []byte{r})
 		if err != nil {
 			return err
 		}
 		// modify
-		r = (r & ^byte(OPT_config_standbytime_mask))
+		r = (r & ^byte(opt_config_standbytime_mask))
 		switch time {
 		case 5:
-			r = r | OPT_config_standbytime_0_5
+			r = r | opt_config_standbytime_0_5
 		case 625:
-			r = r | OPT_config_standbytime_62_5
+			r = r | opt_config_standbytime_62_5
 		case 125:
-			r = r | OPT_config_standbytime_125
+			r = r | opt_config_standbytime_125
 		case 250:
-			r = r | OPT_config_standbytime_250
+			r = r | opt_config_standbytime_250
 		case 500:
-			r = r | OPT_config_standbytime_500
+			r = r | opt_config_standbytime_500
 		case 1000:
-			r = r | OPT_config_standbytime_1000
+			r = r | opt_config_standbytime_1000
 		case 10:
-			r = r | OPT_config_standbytime_10
+			r = r | opt_config_standbytime_10
 		case 20:
-			r = r | OPT_config_standbytime_20
+			r = r | opt_config_standbytime_20
 		}
 		// write
-		_, err = bme.write(REG_config, []byte{r})
+		_, err = bme.write(reg_config, []byte{r})
 		return err
 	}
 }
@@ -272,7 +272,7 @@ func (bme *BME280) write(reg byte, data []byte) (int, error) {
 func (bme *BME280) bootFinished() (err error) {
 	var x [1]byte
 	for x[0] != 0x60 && err == nil {
-		_, err = bme.read(REG_id, x[:])
+		_, err = bme.read(reg_id, x[:])
 		time.Sleep(50 * time.Millisecond)
 	}
 	return err
@@ -282,11 +282,11 @@ func (bme *BME280) readCalibdata() (err error) {
 	// read calibration data
 	var calib1 [26]byte
 	var calib2 [16]byte
-	_, err = bme.read(REG_calib00, calib1[:])
+	_, err = bme.read(reg_calib00, calib1[:])
 	if err != nil {
 		return err
 	}
-	_, err = bme.read(REG_calib26, calib2[:])
+	_, err = bme.read(reg_calib26, calib2[:])
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (bme *BME280) initialize(opts ...option) (err error) {
 
 // latch all data in
 func (bme *BME280) readRaw() (err error) {
-	_, err = bme.read(REG_press_msb, bme.raw[:])
+	_, err = bme.read(reg_press_msb, bme.raw[:])
 	return err
 }
 
