@@ -48,6 +48,9 @@ func (bme *BME280) Option(opts ...option) (err error) {
 	return nil
 }
 
+// OptHumOversampling can receive following values
+// 0 -> off
+// 1, 2, 4, 8, 16
 func OptHumOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
@@ -78,6 +81,9 @@ func OptHumOversampling(sampling int) option {
 	}
 }
 
+// OptTempOversampling can receive following values
+// 0 -> off
+// 1, 2, 4, 8, 16
 func OptTempOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
@@ -108,6 +114,9 @@ func OptTempOversampling(sampling int) option {
 	}
 }
 
+// OptPressOversampling can receive following values
+// 0 -> off
+// 1, 2, 4, 8, 16
 func OptPressOversampling(sampling int) option {
 	return func(bme *BME280) error {
 		// read
@@ -138,6 +147,8 @@ func OptPressOversampling(sampling int) option {
 	}
 }
 
+// OptMode can receive the following values
+// "sleep", "forced", "normal"
 func OptMode(mode string) option {
 	return func(bme *BME280) error {
 		// read
@@ -162,6 +173,9 @@ func OptMode(mode string) option {
 	}
 }
 
+// OptFilter can get following values:
+// 0 -> off
+// 2, 4, 8 ,16
 func OptFilter(mode int) option {
 	return func(bme *BME280) error {
 		// read
@@ -190,6 +204,12 @@ func OptFilter(mode int) option {
 	}
 }
 
+// OptStandbytime can get following values:
+// 5 -> 5ms
+// 625 -> 62.5 ms // carefull this one is special
+// 125 -> 125 ms
+// 250 -> 250ms
+// 500, 1000, 10, 20...
 func OptStandbytime(time int) option {
 	return func(bme *BME280) error {
 		// read
@@ -224,6 +244,7 @@ func OptStandbytime(time int) option {
 	}
 }
 
+// Envdata saves temperature pressure and humidity
 type Envdata struct {
 	Temp  float64 `json:"temp"`
 	Press float64 `json:"press"`
@@ -321,7 +342,7 @@ func (bme *BME280) readRaw() (err error) {
 	return err
 }
 
-// calculate enviroment data
+// Readenv starts the calculation of enviroment data
 func (bme *BME280) Readenv() (env Envdata, err error) {
 	err = bme.readRaw()
 	traw := int32(bme.raw[3])<<12 | int32(bme.raw[4])<<4 | int32(bme.raw[5])>>4
