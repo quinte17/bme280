@@ -60,11 +60,12 @@ const (
 	OPT_config_standbytime_20   = 0xE0
 	OPT_config_standbytime_mask = 0xE0
 
-	OPT_config_filter_off = 0x00
-	OPT_config_filter_2   = 0x04
-	OPT_config_filter_4   = 0x08
-	OPT_config_filter_8   = 0x0C
-	OPT_config_filter_16  = 0x10
+	OPT_config_filter_off  = 0x00
+	OPT_config_filter_2    = 0x04
+	OPT_config_filter_4    = 0x08
+	OPT_config_filter_8    = 0x0C
+	OPT_config_filter_16   = 0x10
+	OPT_config_filter_mask = 0x1C
 
 	OPT_config_enable_3wire = 0x01
 )

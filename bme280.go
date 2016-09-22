@@ -154,6 +154,34 @@ func OptModeNormal() option {
 	}
 }
 
+func OptFilter(mode int) option {
+	return func(bme *BME280) error {
+		// read
+		var r byte
+		_, err := bme.read(REG_config, []byte{r})
+		if err != nil {
+			return err
+		}
+		// modify
+		r = r & ^byte(OPT_config_filter_mask)
+		switch mode {
+		case 0:
+			r = r | OPT_config_filter_off
+		case 2:
+			r = r | OPT_config_filter_2
+		case 4:
+			r = r | OPT_config_filter_4
+		case 8:
+			r = r | OPT_config_filter_8
+		case 16:
+			r = r | OPT_config_filter_16
+		}
+		// write
+		_, err = bme.write(REG_config, []byte{r})
+		return err
+	}
+}
+
 func OptConfigStandbytime(time int) option {
 	return func(bme *BME280) error {
 		// read
