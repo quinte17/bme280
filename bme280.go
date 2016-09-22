@@ -138,7 +138,7 @@ func OptPressOversampling(sampling int) option {
 	}
 }
 
-func OptModeNormal() option {
+func OptMode(mode string) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
@@ -147,7 +147,15 @@ func OptModeNormal() option {
 			return err
 		}
 		// modify
-		r = (r & ^byte(OPT_mode_mask)) | OPT_mode_normal
+		r = r & ^byte(OPT_mode_mask)
+		switch mode {
+		case "sleep":
+			r = r | OPT_mode_sleep
+		case "forced":
+			r = r | OPT_mode_forced
+		case "normal":
+			r = r | OPT_mode_normal
+		}
 		// write
 		_, err = bme.write(REG_ctrl_meas, []byte{r})
 		return err
@@ -182,7 +190,7 @@ func OptFilter(mode int) option {
 	}
 }
 
-func OptConfigStandbytime(time int) option {
+func OptStandbytime(time int) option {
 	return func(bme *BME280) error {
 		// read
 		var r byte
@@ -302,7 +310,7 @@ func (bme *BME280) initialize(opts ...option) (err error) {
 	// initialize bme
 	if len(opts) == 0 {
 		return bme.Option(OptHumOversampling(1), OptTempOversampling(1),
-			OptPressOversampling(1), OptModeNormal(), OptConfigStandbytime(1000))
+			OptPressOversampling(1), OptMode("normal"), OptStandbytime(1000))
 	}
 	return bme.Option(opts...)
 }
@@ -385,7 +393,7 @@ func (bme *BME280) hum(raw int32, tfine int32) float64 {
 // NewI2CDriver initializes the bme280 device to use the i2c-bus for communication.
 // It is expecting the i2c bus as a ReadWriter-Interface.
 // If no options given it will be initialized with:
-// OptHumOversampling(1), OptTempOversampling(1), OptPressOversampling(1), OptModeNormal(), OptConfigStandbytime(1000)
+// OptHumOversampling(1), OptTempOversampling(1), OptPressOversampling(1), OptMode("normal"), OptStandbytime(1000)
 func NewI2CDriver(i2c io.ReadWriter, ops ...option) (*BME280, error) {
 	bme := BME280{
 		i2c: i2c,
