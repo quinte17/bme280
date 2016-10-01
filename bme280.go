@@ -304,6 +304,30 @@ func (bme *BME280) WaitForPowerOnReset() (err error) {
 	return err
 }
 
+// WaitForMeasurement polls the status-register of the bme280 sensor.
+// Possible errors:
+// - Timeout after 3 seconds. This is very uncommon.
+// - If the read of the register fails.
+// Returns nil if sensor has finished measurement
+func (bme *BME280) WaitForMeasurement() (err error) {
+	var x [1]byte
+	timeoutchan := time.After(time.Second * 3)
+	for err == nil {
+		select {
+		case <-timeoutchan:
+			return errors.New("Timeout reached.")
+		default:
+			_, err = bme.read(reg_status, x[:])
+			x[0] = x[0] & opt_status_measure_mask
+			if x[0] == 0 {
+				return nil
+			}
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return err
+}
+
 func (bme *BME280) readCalibdata() (err error) {
 	// read calibration data
 	var calib1 [26]byte

@@ -32,7 +32,6 @@ If you want to use the forced mode use like that:
 	package main
 	
 	import "log"
-	import "time"
 	import "github.com/davecheney/i2c"
 	import "github.com/quinte17/bme280" 
 	
@@ -45,7 +44,7 @@ If you want to use the forced mode use like that:
 		if err != nil {
 			log.Print(err)
 		}
-		bme.Option(bme280.OptMode("forced")) // start one measurment
-		time.Sleep(1 * time.Second())        // sleep long enough so the measurment will be finished.
+		bme.Option(bme280.OptMode("forced")) // start one measurement
+		bme.WaitForMeasurement()             // sleep long enough so the measurement will be finished.
 		log.Print(bme.Readenv())
 	}

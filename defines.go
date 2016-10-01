@@ -69,5 +69,8 @@ const (
 
 	opt_reset = 0xB6
 
+	opt_status_measure_mask   = 0x08
+	opt_status_im_update_mask = 0x01
+
 	opt_config_enable_3wire = 0x01
 )
