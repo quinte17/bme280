@@ -2,6 +2,7 @@ package bme280
 
 import "io"
 import "time"
+import "github.com/pkg/errors"
 
 type BME280 struct {
 	i2c   io.ReadWriter
@@ -244,6 +245,16 @@ func OptStandbytime(time int) option {
 	}
 }
 
+// OptReset will reset the sensor.
+// Use WaitForPowerOnReset before using sensor again.
+func OptReset() option {
+	return func(bme *BME280) error {
+		// write
+		_, err := bme.write(reg_reset, []byte{opt_reset})
+		return err
+	}
+}
+
 // Envdata saves temperature pressure and humidity
 type Envdata struct {
 	Temp  float64 `json:"temp"`
@@ -269,10 +280,25 @@ func (bme *BME280) write(reg byte, data []byte) (int, error) {
 	return bme.i2c.Write(tdata)
 }
 
-func (bme *BME280) bootFinished() (err error) {
+// WaitForPowerOnReset polls the id-register of the bme280 sensor.
+// There can be 3 types of errors.
+// - Timeout after 3 seconds. This is very uncommon.
+// - If the id-register has other values than 0x0 or 0x60.
+// - If the read of the register fails.
+// Returns nil if sensor has finished booting.
+func (bme *BME280) WaitForPowerOnReset() (err error) {
 	var x [1]byte
+	timeoutchan := time.After(time.Second * 3)
 	for x[0] != 0x60 && err == nil {
-		_, err = bme.read(reg_id, x[:])
+		select {
+		case <-timeoutchan:
+			return errors.New("Timeout reached.")
+		default:
+			_, err = bme.read(reg_id, x[:])
+			if x[0] != 0x0 && x[0] != 0x60 {
+				return errors.New("Register has some undefined value. Is this a bme280 sensor?")
+			}
+		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	return err
@@ -319,7 +345,7 @@ func (bme *BME280) readCalibdata() (err error) {
 
 func (bme *BME280) initialize(opts ...option) (err error) {
 	// wait for finished initialisation
-	err = bme.bootFinished()
+	err = bme.WaitForPowerOnReset()
 	if err != nil {
 		return err
 	}

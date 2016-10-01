@@ -67,5 +67,7 @@ const (
 	opt_config_filter_16   = 0x10
 	opt_config_filter_mask = 0x1C
 
+	opt_reset = 0xB6
+
 	opt_config_enable_3wire = 0x01
 )
